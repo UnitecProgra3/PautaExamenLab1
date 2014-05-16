@@ -6,6 +6,11 @@ and may not be redistributed without written permission.*/
 #include "SDL/SDL_image.h"
 #include "SDL/SDL_ttf.h"
 #include <string>
+#include "Burbuja.h"
+#include <list>
+#include <stdlib.h>
+
+using namespace std;
 
 //Screen attributes
 const int SCREEN_WIDTH = 640;
@@ -14,10 +19,6 @@ const int SCREEN_BPP = 32;
 
 //The surfaces
 SDL_Surface *background = NULL;
-SDL_Surface *up = NULL;
-SDL_Surface *down = NULL;
-SDL_Surface *left = NULL;
-SDL_Surface *right = NULL;
 SDL_Surface *screen = NULL;
 
 //The event structure
@@ -31,34 +32,7 @@ SDL_Color textColor = { 0, 0, 0 };
 
 SDL_Surface *load_image( std::string filename )
 {
-    //The image that's loaded
-    SDL_Surface* loadedImage = NULL;
-
-    //The optimized surface that will be used
-    SDL_Surface* optimizedImage = NULL;
-
-    //Load the image
-    loadedImage = IMG_Load( filename.c_str() );
-
-    //If the image loaded
-    if( loadedImage != NULL )
-    {
-        //Create an optimized surface
-        optimizedImage = SDL_DisplayFormat( loadedImage );
-
-        //Free the old surface
-        SDL_FreeSurface( loadedImage );
-
-        //If the surface was optimized
-        if( optimizedImage != NULL )
-        {
-            //Color key surface
-            SDL_SetColorKey( optimizedImage, SDL_SRCCOLORKEY, SDL_MapRGB( optimizedImage->format, 0, 0xFF, 0xFF ) );
-        }
-    }
-
-    //Return the optimized surface
-    return optimizedImage;
+    return IMG_Load( filename.c_str() );
 }
 
 void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip = NULL )
@@ -132,10 +106,6 @@ void clean_up()
 {
     //Free the surfaces
     SDL_FreeSurface( background );
-    SDL_FreeSurface( up );
-    SDL_FreeSurface( down );
-    SDL_FreeSurface( left );
-    SDL_FreeSurface( right );
 
     //Close the font
     TTF_CloseFont( font );
@@ -164,15 +134,23 @@ int main( int argc, char* args[] )
         return 1;
     }
 
-    //Render the text
-    up = TTF_RenderText_Solid( font, "Up", textColor );
-    down = TTF_RenderText_Solid( font, "Down", textColor );
-    left = TTF_RenderText_Solid( font, "Left", textColor );
-    right = TTF_RenderText_Solid( font, "Right", textColor );
+    srand (time(NULL));
+    list<Burbuja*>burbujas;
+    burbujas.push_back(new Burbuja(load_image("burbuja.png"),
+        screen,0,rand() % 100 ));
 
     //While the user hasn't quit
+    int frame=0;
     while( quit == false )
     {
+        frame++;
+        if(frame%100==0)
+        {
+            burbujas.push_back(new Burbuja(load_image("burbuja.png"),
+                screen,0,rand() % SCREEN_HEIGHT ));
+        }
+        int click_x=-1;
+        int click_y=-1;
         //While there's events to handle
         while( SDL_PollEvent( &event ) )
         {
@@ -182,36 +160,36 @@ int main( int argc, char* args[] )
                 //Quit the program
                 quit = true;
             }
+
+            //If a mouse button was pressed
+            if( event.type == SDL_MOUSEBUTTONDOWN )
+            {
+                //If the left mouse button was pressed
+                if( event.button.button == SDL_BUTTON_LEFT )
+                {
+                    click_x=event.button.x;
+                    click_y=event.button.y;
+                }
+            }
         }
 
         //Apply the background
         apply_surface( 0, 0, background, screen );
 
-        //Get the keystates
-        Uint8 *keystates = SDL_GetKeyState( NULL );
-
-        //If up is pressed
-        if( keystates[ SDLK_UP ] )
+        list<Burbuja*>::iterator i=burbujas.begin();
+        while(i!=burbujas.end())
         {
-            apply_surface( ( SCREEN_WIDTH - up->w ) / 2, ( SCREEN_HEIGHT / 2 - up->h ) / 2, up, screen );
-        }
-
-        //If down is pressed
-        if( keystates[ SDLK_DOWN ] )
-        {
-            apply_surface( ( SCREEN_WIDTH - down->w ) / 2, ( SCREEN_HEIGHT / 2 - down->h ) / 2 + ( SCREEN_HEIGHT / 2 ), down, screen );
-        }
-
-        //If left is pressed
-        if( keystates[ SDLK_LEFT ] )
-        {
-            apply_surface( ( SCREEN_WIDTH / 2 - left->w ) / 2, ( SCREEN_HEIGHT - left->h ) / 2, left, screen );
-        }
-
-        //If right is pressed
-        if( keystates[ SDLK_RIGHT ] )
-        {
-            apply_surface( ( SCREEN_WIDTH / 2 - right->w ) / 2 + ( SCREEN_WIDTH / 2 ), ( SCREEN_HEIGHT - right->h ) / 2, right, screen );
+            if((*i)->borrar)
+            {
+                Burbuja*temp = (*i);
+                i = burbujas.erase(i);
+                delete temp;
+            }else
+            {
+                (*i)->dibujar();
+                (*i)->logica(click_x,click_y);
+            }
+            i++;
         }
 
         //Update the screen

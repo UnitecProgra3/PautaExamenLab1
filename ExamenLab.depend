@@ -1,0 +1,17 @@
+# depslib dependency file v1.0
+1400268582 source:/home/turupawn/Projects/Codeblocks/Clases/ExamenLab/main.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	"SDL/SDL_ttf.h"
+	<string>
+	"Burbuja.h"
+	<list>
+	<stdlib.h>
+
+1400267652 source:/home/turupawn/Projects/Codeblocks/Clases/ExamenLab/Burbuja.cpp
+	"Burbuja.h"
+
+1400267624 /home/turupawn/Projects/Codeblocks/Clases/ExamenLab/Burbuja.h
+	<list>
+	<SDL/SDL.h>
+
