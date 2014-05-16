@@ -117,28 +117,11 @@ void clean_up()
     SDL_Quit();
 }
 
-int main( int argc, char* args[] )
+void elJuego()
 {
-    //Quit flag
-    bool quit = false;
-
-    //Initialize
-    if( init() == false )
-    {
-        return 1;
-    }
-
-    //Load the files
-    if( load_files() == false )
-    {
-        return 1;
-    }
-
     srand (time(NULL));
+    bool quit=false;
     list<Burbuja*>burbujas;
-    burbujas.push_back(new Burbuja(load_image("burbuja.png"),
-        screen,0,rand() % 100 ));
-
     //While the user hasn't quit
     int frame=0;
     while( quit == false )
@@ -195,9 +178,60 @@ int main( int argc, char* args[] )
         //Update the screen
         if( SDL_Flip( screen ) == -1 )
         {
-            return 1;
+            return;
         }
     }
+}
+
+void menu()
+{
+    int frame=0;
+    SDL_Surface* menu_bg=load_image("menu.png");
+    bool quit=false;
+    while( quit == false )
+    {
+        while( SDL_PollEvent( &event ) )
+        {
+            //If the user has Xed out the window
+            if( event.type == SDL_QUIT )
+            {
+                //Quit the program
+                quit = true;
+            }
+            if( event.type == SDL_KEYDOWN
+                && event.key.keysym.sym == SDLK_RETURN)
+            {
+                elJuego();
+            }
+        }
+        apply_surface( 0, 0, menu_bg, screen );
+        //Update the screen
+        if( SDL_Flip( screen ) == -1 )
+        {
+            return;
+        }
+    }
+}
+
+int main( int argc, char* args[] )
+{
+    //Quit flag
+    bool quit = false;
+
+    //Initialize
+    if( init() == false )
+    {
+        return 1;
+    }
+
+    //Load the files
+    if( load_files() == false )
+    {
+        return 1;
+    }
+
+    //El juego
+    menu();
 
     //Clean up
     clean_up();
